@@ -133,7 +133,8 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     libexifa \
-    libjpega
+    libjpega \
+	libshim
 
 # Device-specific packages
 PRODUCT_PACKAGES += \

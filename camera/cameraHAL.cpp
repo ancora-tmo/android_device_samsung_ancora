@@ -34,10 +34,10 @@
 #include <signal.h>
 
 #include <cutils/log.h>
-#include <ui/legacy/Overlay.h>
+#include "libshims/ui/Overlay.h"
 #include <camera/CameraParameters.h>
 #include <hardware/camera.h>
-#include <binder/IMemory.h>
+#include "libshims/binder/IMemory.h"
 #include "CameraHardwareInterface.h"
 #include <cutils/properties.h>
 #include <gralloc_priv.h>

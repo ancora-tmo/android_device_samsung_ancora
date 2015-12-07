@@ -134,7 +134,7 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     libexifa \
     libjpega \
-	libshim
+	libshims
 
 # Device-specific packages
 PRODUCT_PACKAGES += \

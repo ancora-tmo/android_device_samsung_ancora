@@ -42,9 +42,6 @@ TARGET_CPU_ABI := armeabi-v7a
 TARGET_CPU_ABI2 := armeabi
 TARGET_CPU_SMP := false
 
-# Use dlmalloc instead of jemalloc for mallocs on low-ram targets
-MALLOC_IMPL := dlmalloc
-
 # Enable dex-preoptimization to speed up first boot sequence
 WITH_DEXPREOPT := true
 

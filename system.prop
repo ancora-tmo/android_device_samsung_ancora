@@ -54,6 +54,9 @@ config.disable_atlas=true
 # Enable smooth streaming
 mm.enable.smoothstreaming=true
 
+# Art
+dalvik.vm.dex2oat-swap=false
+
 # Multi-window
 #persist.sys.debug.multi_window=true
 

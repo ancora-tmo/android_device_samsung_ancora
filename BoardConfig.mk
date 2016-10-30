@@ -55,10 +55,12 @@ TARGET_KERNEL_SOURCE := kernel/samsung/msm7x30-common
 TARGET_KERNEL_CONFIG := ancora_defconfig
 
 # Build kernel with GCC 4.9
-#TARGET_KERNEL_CROSS_COMPILE_PREFIX := arm-linux-androideabi-
+TARGET_KERNEL_CROSS_COMPILE_PREFIX := arm-linux-androideabi-
 
 # disable block based ota
 BLOCK_BASED_OTA := false
+
+MALLOC_IMPL := dlmalloc
 
 # Wifi related defines
 WIFI_BAND                        := 802_11_ABG
@@ -140,6 +142,7 @@ BOARD_FLASH_BLOCK_SIZE := 131072
 #BOARD_SYSTEMIMAGE_JOURNAL_SIZE := 0
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_USERIMAGES_USE_F2FS := true
+TARGET_KERNEL_HAVE_EXFAT := true 
 
 # TWRP recovery
 DEVICE_RESOLUTION := 480x800

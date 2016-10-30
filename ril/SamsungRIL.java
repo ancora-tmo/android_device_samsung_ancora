@@ -61,7 +61,6 @@ import android.telephony.Rlog;
 
 public class SamsungRIL extends RIL implements CommandsInterface {
 
-    private boolean setPreferredNetworkTypeSeen = false;
     private boolean mSignalbarCount = SystemProperties.getInt("ro.telephony.sends_barcount", 0) == 1 ? true : false;
     private boolean mIsSamsungCdma = SystemProperties.getBoolean("ro.ril.samsung_cdma", false);
     private Object mCatProCmdBuffer;
@@ -890,19 +889,13 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         /* Samsung modem implementation does bad things when a datacall is running
          * while switching the preferred networktype.
          */
+        TelephonyManager tm =
+            (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
 
-        if (!setPreferredNetworkTypeSeen) {
-            setRadioPower(false, null);
-            setPreferredNetworkTypeSeen = true;
-        }
-
-        ConnectivityManager cm =
-            (ConnectivityManager)mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo.State mobileState = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState();
-        if (mobileState == NetworkInfo.State.CONNECTING) {
-            ConnectivityHandler handler = new ConnectivityHandler(mContext);
-            handler.setPreferedNetworkType(networkType, response);
+        if (tm.getDataEnabled()) {
+            tm.setDataEnabled(false);
+            sendPreferedNetworktype(networkType, response);
+            tm.setDataEnabled(true);
         } else {
             sendPreferedNetworktype(networkType, response);
         }
@@ -984,6 +977,53 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         }
     }
 
+    @Override
+    public void getImsRegistrationState(Message result) {
+        riljLog("getImsRegistrationState: not supported");
+        if (result != null) {
+            CommandException ex = new CommandException(
+                CommandException.Error.REQUEST_NOT_SUPPORTED);
+            AsyncResult.forMessage(result, null, ex);
+            result.sendToTarget();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setDataAllowed(boolean allowed, Message result) {
+        riljLog("setDataAllowed: not supported");
+        if (result != null) {
+            CommandException ex = new CommandException(
+                CommandException.Error.REQUEST_NOT_SUPPORTED);
+            AsyncResult.forMessage(result, null, ex);
+            result.sendToTarget();
+        }
+    }
+
+    @Override
+    public void startLceService(int reportIntervalMs, boolean pullMode, Message response) {
+        riljLog("startLceService: not supported");
+        if (response != null) {
+            CommandException ex = new CommandException(
+                CommandException.Error.REQUEST_NOT_SUPPORTED);
+            AsyncResult.forMessage(response, null, ex);
+            response.sendToTarget();
+        }
+    }
+
+    @Override
+    public void iccOpenLogicalChannel(String AID, Message response) {
+        riljLog("iccOpenLogicalChannel: not supported");
+        if (response != null) {
+            CommandException ex = new CommandException(
+                CommandException.Error.REQUEST_NOT_SUPPORTED);
+            AsyncResult.forMessage(response, null, ex);
+            response.sendToTarget();
+        }
+    }
+
     /**
      * RIL doesn't support RIL_REQUEST_SEND_SMS_EXPECT_MORE to send a multipart sms,
      * so use RIL_REQUEST_SEND_SMS instead.
@@ -991,90 +1031,5 @@ public class SamsungRIL extends RIL implements CommandsInterface {
     @Override
     public void sendSMSExpectMore(String smscPDU, String pdu, Message result) {
         sendSMS(smscPDU, pdu, result);
-    }
-
-    /* private class that does the handling for the dataconnection
-     * dataconnection is done async, so we send the request for disabling it,
-     * wait for the response, set the prefered networktype and notify the
-     * real sender with its result.
-     */
-    private class ConnectivityHandler extends Handler{
-
-        private static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE = 30;
-        private Context mContext;
-        private int mDesiredNetworkType;
-        //the original message, we need it for calling back the original caller when done
-        private Message mNetworktypeResponse;
-        private ConnectivityBroadcastReceiver mConnectivityReceiver =  new ConnectivityBroadcastReceiver();
-
-        public ConnectivityHandler(Context context)
-        {
-            mContext = context;
-        }
-
-        private void startListening() {
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-            mContext.registerReceiver(mConnectivityReceiver, filter);
-        }
-
-        private synchronized void stopListening() {
-            mContext.unregisterReceiver(mConnectivityReceiver);
-        }
-
-        public void setPreferedNetworkType(int networkType, Message response)
-        {
-            Rlog.d(RILJ_LOG_TAG, "Mobile Dataconnection is online setting it down");
-            mDesiredNetworkType = networkType;
-            mNetworktypeResponse = response;
-            TelephonyManager tm =
-                (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            //start listening for the connectivity change broadcast
-            startListening();
-            tm.disableDataConnectivity();
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            switch(msg.what) {
-            //networktype was set, now we can enable the dataconnection again
-            case MESSAGE_SET_PREFERRED_NETWORK_TYPE:
-                TelephonyManager tm =
-					(TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-
-                Rlog.d(RILJ_LOG_TAG, "preferred NetworkType set upping Mobile Dataconnection");
-
-                tm.enableDataConnectivity();
-                //everything done now call back that we have set the networktype
-                AsyncResult.forMessage(mNetworktypeResponse, null, null);
-                mNetworktypeResponse.sendToTarget();
-                mNetworktypeResponse = null;
-                break;
-            default:
-                throw new RuntimeException("unexpected event not handled");
-            }
-        }
-
-        private class ConnectivityBroadcastReceiver extends BroadcastReceiver {
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                if (!action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-                    Rlog.w(RILJ_LOG_TAG, "onReceived() called with " + intent);
-                    return;
-                }
-                boolean noConnectivity =
-                    intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
-
-                if (noConnectivity) {
-                    //Ok dataconnection is down, now set the networktype
-                    Rlog.w(RILJ_LOG_TAG, "Mobile Dataconnection is now down setting preferred NetworkType");
-                    stopListening();
-                    sendPreferedNetworktype(mDesiredNetworkType, obtainMessage(MESSAGE_SET_PREFERRED_NETWORK_TYPE));
-                    mDesiredNetworkType = -1;
-                }
-            }
-        }
     }
 }

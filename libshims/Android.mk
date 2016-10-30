@@ -11,13 +11,7 @@ LOCAL_SRC_FILES := \
      ui/GraphicBufferMapper.cpp \
      media_shim.cpp \
      MemoryHeapPmem.cpp \
-     MemoryBase.c \
-     VectorImpl.cpp
-
-#     SharedBuffer.cpp \
-
-
-LOCAL_C_INCLUDES += external/safe-iop/include
+     MemoryBase.c
 
 LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware libui libgui libbinder libutils libsync libmedia
 

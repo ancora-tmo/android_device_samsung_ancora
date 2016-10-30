@@ -207,4 +207,7 @@
 
     <!-- Show battery fully charged notification -->
     <bool name="config_showBatteryFullyChargedNotification">true</bool>
+
+    <!-- Set the system language as value of EF LI/EF PL -->
+    <bool name="config_use_sim_language_file">false</bool>
 </resources>

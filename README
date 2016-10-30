@@ -41,3 +41,7 @@
 # 3-https://github.com/sirmordred/android_bionic/commit/b1e089a5bd0f9eaf0b4f9ab9a58a246c2cb88d23
 # 4-http://review.cyanogenmod.org/#/c/117733/
 # 5-https://github.com/lollipopi9000/android_bionic/commit/0ac7b519a9b817ecbc9aa12efcda4f505a253b39
+# Fixes for camera(legacy vectorimpl)
+# 6-https://github.com/CyanogenMod/android_system_core/commit/04e5e3b697caa1f47c89439415ddd870b3489a8f
+# 7-https://github.com/CyanogenMod/android_system_core/commit/1ff785445828a9a40138d67e1de2a4fbae9680e9
+# 8-revert https://github.com/CyanogenMod/android_bionic/commit/02b1d48d51ffed14442390c80e773f3ac89396ff

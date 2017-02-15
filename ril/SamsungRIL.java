@@ -111,13 +111,15 @@ public class SamsungRIL extends RIL implements CommandsInterface {
             rr.mParcel.writeInt(0);
         }
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+        if (RILJ_LOGD) {
+	    riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+	}
         send(rr);
     }
 
     @Override
     protected RILRequest
-    processSolicited (Parcel p) {
+    processSolicited (Parcel p, int type) {
         int serial, error;
 
         serial = p.readInt();
@@ -312,8 +314,10 @@ public class SamsungRIL extends RIL implements CommandsInterface {
             }
         }
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "< " + requestToString(rr.mRequest)
+        if (RILJ_LOGD) {
+		    riljLog(rr.serialString() + "< " + requestToString(rr.mRequest)
                 + " " + retToString(rr.mRequest, ret));
+	}
 
         if (rr.mResult != null) {
             AsyncResult.forMessage(rr.mResult, ret, null);
@@ -346,7 +350,9 @@ public class SamsungRIL extends RIL implements CommandsInterface {
             rr.mParcel.writeByteArray(uusInfo.getUserData());
         }
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+        if (RILJ_LOGD) {
+	    riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+	}
 
         send(rr);
     }
@@ -362,14 +368,16 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         rr.mParcel.writeInt(0);
         rr.mParcel.writeInt(0);
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+        if (RILJ_LOGD) {
+	    riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+	}
 
         send(rr);
     }
 
     @Override
     protected void
-    processUnsolicited (Parcel p) {
+    processUnsolicited (Parcel p, int type) {
         int response;
         Object ret;
         int dataPosition = p.dataPosition();
@@ -384,7 +392,6 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         case RIL_UNSOL_STK_PROACTIVE_COMMAND: ret = responseString(p); break;
 
         //fixing anoying Exceptions caused by the new Samsung states
-
         case RIL_UNSOL_O2_HOME_ZONE_INFO: ret = responseVoid(p); break;
         case RIL_UNSOL_DEVICE_READY_NOTI: ret = responseVoid(p); break;
         case RIL_UNSOL_GPS_NOTI: ret = responseVoid(p); break; // Ignored in TW RIL.
@@ -397,116 +404,124 @@ public class SamsungRIL extends RIL implements CommandsInterface {
             p.setDataPosition(dataPosition);
 
             // Forward responses that we are not overriding to the super class
-            super.processUnsolicited(p);
+            super.processUnsolicited(p, type);
             return;
         }
 
         switch(response) {
-        case RIL_UNSOL_HSDPA_STATE_CHANGED:
-            if (RILJ_LOGD) unsljLog(response);
+            case RIL_UNSOL_HSDPA_STATE_CHANGED:
+                if (RILJ_LOGD) {
+		    unsljLog(response);
+	        }
 
-            boolean newHsdpa = ((int[])ret)[0] == 1;
-            String curState = SystemProperties.get(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE);
-            boolean curHsdpa = false;
+                boolean newHsdpa = ((int[])ret)[0] == 1;
+                String curState = SystemProperties.get(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE);
+                boolean curHsdpa = false;
 
-            if (curState.startsWith("HSDPA")) {
-                curHsdpa = true;
-            } else if (!curState.startsWith("UMTS")) {
-                // Don't send poll request if not on 3g
+                if (curState.startsWith("HSDPA")) {
+                    curHsdpa = true;
+                } else if (!curState.startsWith("UMTS")) {
+                    // Don't send poll request if not on 3g
+                    break;
+                }
+
+                if (curHsdpa != newHsdpa) {
+                    mVoiceNetworkStateRegistrants.notifyRegistrants(new AsyncResult(null, null, null));
+                }
                 break;
-            }
 
-            if (curHsdpa != newHsdpa) {
-                mVoiceNetworkStateRegistrants
-                    .notifyRegistrants(new AsyncResult(null, null, null));
-            }
-            break;
+            case RIL_UNSOL_NITZ_TIME_RECEIVED:
+                if (RILJ_LOGD) {
+		    unsljLogRet(response, ret);
+	        }
 
-        case RIL_UNSOL_NITZ_TIME_RECEIVED:
-            if (RILJ_LOGD) unsljLogRet(response, ret);
+                // has bonus long containing milliseconds since boot that the NITZ
+                // time was received
+                long nitzReceiveTime = p.readLong();
 
-            // has bonus long containing milliseconds since boot that the NITZ
-            // time was received
-            long nitzReceiveTime = p.readLong();
+                Object[] result = new Object[2];
 
-            Object[] result = new Object[2];
+                String nitz = (String)ret;
+                if (RILJ_LOGD) {
+		    riljLog(" RIL_UNSOL_NITZ_TIME_RECEIVED length = " + nitz.split("[/:,+-]").length);
+	        }
 
-            String nitz = (String)ret;
-            if (RILJ_LOGD) riljLog(" RIL_UNSOL_NITZ_TIME_RECEIVED length = "
-                    + nitz.split("[/:,+-]").length);
+                // remove the tailing information that samsung added to the string
+                if (nitz.split("[/:,+-]").length >= 9) {
+                    nitz = nitz.substring(0,(nitz.lastIndexOf(",")));
+		}
 
-            // remove the tailing information that samsung added to the string
-            if(nitz.split("[/:,+-]").length >= 9)
-                nitz = nitz.substring(0,(nitz.lastIndexOf(",")));
+                if (RILJ_LOGD) {
+		    riljLog(" RIL_UNSOL_NITZ_TIME_RECEIVED striped nitz = " + nitz);
+	        }
 
-            if (RILJ_LOGD) riljLog(" RIL_UNSOL_NITZ_TIME_RECEIVED striped nitz = "
-                    + nitz);
+                result[0] = nitz;
+                result[1] = Long.valueOf(nitzReceiveTime);
 
-            result[0] = nitz;
-            result[1] = Long.valueOf(nitzReceiveTime);
-
-            if (mNITZTimeRegistrant != null) {
-
-                mNITZTimeRegistrant
-                .notifyRegistrant(new AsyncResult (null, result, null));
-            } else {
-                // in case NITZ time registrant isnt registered yet
-                mLastNITZTimeInfo = nitz;
-            }
-            break;
-
-        case RIL_UNSOL_SIGNAL_STRENGTH:
-            // Note this is set to "verbose" because it happens
-            // frequently
-            if (RILJ_LOGV) unsljLogvRet(response, ret);
-
-            if (mSignalStrengthRegistrant != null) {
-                mSignalStrengthRegistrant.notifyRegistrant(
-                                    new AsyncResult (null, ret, null));
-            }
-            break;
-
-        case RIL_UNSOL_STK_PROACTIVE_COMMAND:
-            if (RILJ_LOGD) unsljLogRet(response, ret);
-
-            if (mCatProCmdRegistrant != null) {
-                mCatProCmdRegistrant.notifyRegistrant(
-                                    new AsyncResult (null, ret, null));
-            } else {
-                // The RIL will send a CAT proactive command before the
-                // registrant is registered. Buffer it to make sure it
-                // does not get ignored (and breaks CatService).
-                mCatProCmdBuffer = ret;
-            }
-            break;
-
-        case RIL_UNSOL_CDMA_INFO_REC:
-            ArrayList<CdmaInformationRecords> listInfoRecs;
-
-            try {
-                listInfoRecs = (ArrayList<CdmaInformationRecords>)ret;
-            } catch (ClassCastException e) {
-                Rlog.e(RILJ_LOG_TAG, "Unexpected exception casting to listInfoRecs", e);
+                if (mNITZTimeRegistrant != null) {
+                    mNITZTimeRegistrant.notifyRegistrant(new AsyncResult (null, result, null));
+                } else {
+                    // in case NITZ time registrant isnt registered yet
+                    mLastNITZTimeInfo = nitz;
+                }
                 break;
-            }
 
-            for (CdmaInformationRecords rec : listInfoRecs) {
-                if (RILJ_LOGD) unsljLogRet(response, rec);
-                notifyRegistrantsCdmaInfoRec(rec);
-            }
-            break;
+            case RIL_UNSOL_SIGNAL_STRENGTH:
+                // Note this is set to "verbose" because it happens
+                // frequently
+                if (RILJ_LOGV) {
+		    unsljLogvRet(response, ret);
+	        }
 
-        case RIL_UNSOL_AM:
-            String amString = (String) ret;
-            Rlog.d(RILJ_LOG_TAG, "Executing AM: " + amString);
+                if (mSignalStrengthRegistrant != null) {
+                    mSignalStrengthRegistrant.notifyRegistrant(new AsyncResult (null, ret, null));
+                }
+                break;
 
-            try {
-                Runtime.getRuntime().exec("am " + amString);
-            } catch (IOException e) {
-                e.printStackTrace();
-                Rlog.e(RILJ_LOG_TAG, "am " + amString + " could not be executed.");
-            }
-            break;
+            case RIL_UNSOL_STK_PROACTIVE_COMMAND:
+                if (RILJ_LOGD) {
+		    unsljLogRet(response, ret);
+	        }
+
+                if (mCatProCmdRegistrant != null) {
+                    mCatProCmdRegistrant.notifyRegistrant(new AsyncResult (null, ret, null));
+                } else {
+                   // The RIL will send a CAT proactive command before the
+                   // registrant is registered. Buffer it to make sure it
+                   // does not get ignored (and breaks CatService).
+                   mCatProCmdBuffer = ret;
+                }
+                break;
+
+            case RIL_UNSOL_CDMA_INFO_REC:
+                ArrayList<CdmaInformationRecords> listInfoRecs;
+
+                try {
+                    listInfoRecs = (ArrayList<CdmaInformationRecords>)ret;
+                } catch (ClassCastException e) {
+                    Rlog.e(RILJ_LOG_TAG, "Unexpected exception casting to listInfoRecs", e);
+                    break;
+                }
+
+                for (CdmaInformationRecords rec : listInfoRecs) {
+                    if (RILJ_LOGD) {
+			    unsljLogRet(response, rec);
+		    }
+                    notifyRegistrantsCdmaInfoRec(rec);
+                }
+                break;
+
+            case RIL_UNSOL_AM:
+                String amString = (String) ret;
+                Rlog.d(RILJ_LOG_TAG, "Executing AM: " + amString);
+
+                try {
+                    Runtime.getRuntime().exec("am " + amString);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Rlog.e(RILJ_LOG_TAG, "am " + amString + " could not be executed.");
+                }
+                break;
         }
     }
 
@@ -528,7 +543,7 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         num = p.readInt();
         response = new ArrayList<DriverCall>(num);
 
-        for (int i = 0 ; i < num ; i++) {
+        for (int i = 0; i < num; i++) {
             if (mIsSamsungCdma)
                 dc = new SamsungDriverCall();
             else
@@ -610,7 +625,7 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         }
 
         if (mIsSamsungCdma) {
-            if(response[3] < 0){
+            if(response[3] < 0) {
                response[3] = -response[3];
             }
             // Framework takes care of the rest for us.
@@ -884,6 +899,9 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setPreferredNetworkType(int networkType , Message response) {
         /* Samsung modem implementation does bad things when a datacall is running
@@ -900,7 +918,6 @@ public class SamsungRIL extends RIL implements CommandsInterface {
             sendPreferedNetworktype(networkType, response);
         }
     }
-
 
     //Sends the real RIL request to the modem.
     private void sendPreferedNetworktype(int networkType, Message response) {
@@ -926,6 +943,16 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         }
     }
 
+    @Override
+    public void getRadioCapability (Message response) {
+        riljLog("getRadioCapability: returning static radio capability");
+        if (response != null) {
+            Object ret = makeStaticRadioCapability();
+            AsyncResult.forMessage(response, ret, null);
+            response.sendToTarget();
+        }
+    }
+
     // This call causes ril to crash the socket, stopping further communication
     @Override
     public void
@@ -942,8 +969,8 @@ public class SamsungRIL extends RIL implements CommandsInterface {
     /**
      * {@inheritDoc}
      */
-     @Override
-     public void getCellInfoList(Message result) {
+    @Override
+    public void getCellInfoList(Message result) {
         riljLog("getCellInfoList: not supported");
         if (result != null) {
             CommandException ex = new CommandException(
@@ -951,28 +978,18 @@ public class SamsungRIL extends RIL implements CommandsInterface {
             AsyncResult.forMessage(result, null, ex);
             result.sendToTarget();
         }
-     }
+    }
 
     /**
-     * {@inheritDoc}
-     */
-     @Override
-     public void setCellInfoListRate(int rateInMillis, Message response) {
+    * {@inheritDoc}
+    */
+    @Override
+    public void setCellInfoListRate(int rateInMillis, Message response) {
         riljLog("setCellInfoListRate: not supported");
         if (response != null) {
             CommandException ex = new CommandException(
                 CommandException.Error.REQUEST_NOT_SUPPORTED);
             AsyncResult.forMessage(response, null, ex);
-            response.sendToTarget();
-        }
-     }
-	 
-    @Override
-    public void getRadioCapability (Message response) {
-        riljLog("getRadioCapability: returning static radio capability");
-        if (response != null) {
-            Object ret = makeStaticRadioCapability();
-            AsyncResult.forMessage(response, ret, null);
             response.sendToTarget();
         }
     }
@@ -1016,6 +1033,19 @@ public class SamsungRIL extends RIL implements CommandsInterface {
     @Override
     public void iccOpenLogicalChannel(String AID, Message response) {
         riljLog("iccOpenLogicalChannel: not supported");
+        if (response != null) {
+            CommandException ex = new CommandException(
+                CommandException.Error.REQUEST_NOT_SUPPORTED);
+            AsyncResult.forMessage(response, null, ex);
+            response.sendToTarget();
+        }
+    }
+
+    /**
+    * @hide
+    */
+    public void getModemActivityInfo(Message response) {
+        riljLog("getModemActivityInfo: not supported");
         if (response != null) {
             CommandException ex = new CommandException(
                 CommandException.Error.REQUEST_NOT_SUPPORTED);

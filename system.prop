@@ -45,7 +45,9 @@ ro.sys.fw.bg_apps_limit=16
 # Set max background services
 ro.config.max_starting_bg=8
 
-# Force camera API version 1
+# Camera
+media.stagefright.legacyencoder=true
+media.stagefright.less-secure=true
 camera2.portability.force_api=1
 
 # Disable atlas services on low-ram targets
@@ -56,9 +58,7 @@ mm.enable.smoothstreaming=true
 
 # Art
 dalvik.vm.dex2oat-swap=false
-
-# Multi-window
-#persist.sys.debug.multi_window=true
+#ro.sys.fw.dex2oat_thread_count=1
 
 # Custom dalvik heap parameters
 dalvik.vm.heapstartsize=5m
@@ -67,3 +67,8 @@ dalvik.vm.heapsize=128m
 dalvik.vm.heaptargetutilization=0.9
 dalvik.vm.heapminfree=512k
 dalvik.vm.heapmaxfree=2m
+
+# Enable sdcardfs
+ro.sys.sdcardfs=true
+
+ro.am.reschedule_service=true

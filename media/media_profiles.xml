@@ -81,7 +81,7 @@
         <!--
         Profiles for the back camera
         -->
-
+        <!-- TEMP disable 720p recording until the issue has been resolved
         <EncoderProfile quality="720p" fileFormat="mp4" duration="30">
             <Video codec="h264"
                    bitRate="6000000"
@@ -93,6 +93,7 @@
                    sampleRate="48000"
                    channels="2" />
         </EncoderProfile>
+        -->
 
         <EncoderProfile quality="480p" fileFormat="mp4" duration="30">
             <Video codec="h264"
@@ -118,6 +119,7 @@
                    channels="1" />
         </EncoderProfile>
 
+        <!-- TEMP disable 720p recording until the issue has been resolved
         <EncoderProfile quality="timelapse720p" fileFormat="mp4" duration="30">
             <Video codec="h264"
                    bitRate="6000000"
@@ -129,7 +131,7 @@
                    sampleRate="48000"
                    channels="2" />
         </EncoderProfile>
-
+        -->
 
         <EncoderProfile quality="timelapse480p" fileFormat="mp4" duration="30">
             <Video codec="h264"

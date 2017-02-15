@@ -17,10 +17,13 @@
 | Camera                  | 5 MP(Back), 1.3MP(Front)          |
 | Release Date            | August 2011                       |
 
+Supported CM Versions:
+cm-9,cm-10,cm-10.1,cm-10.2,cm-11,cm-12,cm-12.1,cm-13,cm-14,cm-14.1
+
 ## Copyright
 
 #
-# Copyright (C) 2014 The CyanogenMod Project
+# Copyright (C) 2016 The CyanogenMod Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,12 +39,30 @@
 #
 
 # Needed Patches:
-# 1-https://github.com/CyanogenMod/android_frameworks_opt_telephony/commit/8dd84c2dcc51c4d4cd37e1b366ada1015949bc10
-# 2-https://github.com/AriesVE-DevCon-TEAM/android_frameworks_native/commit/10c37980f508fd5f12c091f6676ff80ff85a940f
-# 3-https://github.com/sirmordred/android_bionic/commit/b1e089a5bd0f9eaf0b4f9ab9a58a246c2cb88d23
-# 4-http://review.cyanogenmod.org/#/c/117733/
-# 5-https://github.com/lollipopi9000/android_bionic/commit/0ac7b519a9b817ecbc9aa12efcda4f505a253b39
-# Fixes for camera(legacy vectorimpl)
-# 6-https://github.com/CyanogenMod/android_system_core/commit/04e5e3b697caa1f47c89439415ddd870b3489a8f
-# 7-https://github.com/CyanogenMod/android_system_core/commit/1ff785445828a9a40138d67e1de2a4fbae9680e9
-# 8-revert https://github.com/CyanogenMod/android_bionic/commit/02b1d48d51ffed14442390c80e773f3ac89396ff
+
+Audio,Media,Display HALs: https://github.com/cyanogenmod-nougat-samsung-msm7x30
+
+# RIL fixes
+# 1-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_frameworks_opt_telephony/commit/ac347850f352a3401b1e1676e0cce01d27af7e7a
+# 2-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_frameworks_opt_telephony/commit/9b56e50b574987a3cbc5992baed0071c4959e076
+# 3-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_frameworks_opt_telephony/commit/cf7fa303e5991c1bdd2e532f5e14a581e0d4976d
+# 4-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_bionic/commit/4b81e25839bb74a95f6b67fe1e2e63a6240b4226
+# 5-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_bionic/commit/b6f22a843ef9f146268213ecc2aaeace84566e0e
+
+# Camera fixes
+# 1-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_frameworks_av/commit/3bc574f5fb7ae38f1b2f43892f7e70bb08b28141
+# 2-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_frameworks_native/commit/a5c5109b2aeae096abb05222e6a30ad25adb6351
+# 3-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_bionic/commit/f1f83cb343bf4a86081619ab776036ca63b40986
+# 4-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_system_core/commit/36aab1cc9d0b8f989b1073e9a1d93132f38057b5
+
+# SELinux fix
+# 1-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_system_core/commit/6b912ab21f6d43bc102cfab5d3b2914bdc138600
+
+# BT fix
+# 1-https://review.cyanogenmod.org/#/c/176685/
+
+# Additional updates
+# 1-https://github.com/cyanogenmod-nougat-samsung-msm7x30/android_frameworks_base/commit/fb1a7eb0991d3931b084e3b96dade4975e0680f8
+
+# Optimization
+# https://github.com/CyanogenMod/android_build/commit/3da4f32794e00dbfb798feba69bb05b0a9e07b78 (set smp)

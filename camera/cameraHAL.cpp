@@ -22,6 +22,9 @@
 
 #define LOG_NDEBUG 1      /* disable LOGV */
 
+#define OPEN_RETRIES    10
+#define OPEN_RETRY_MSEC 50
+
 #define MAX_CAMERAS_SUPPORTED 2
 
 #define CAMERA_ID_FRONT 1
@@ -226,7 +229,7 @@ static void wrap_queue_buffer_hook(void *data, void *buffer)
     dev->gralloc->unlock(dev->gralloc, *buf_handle);
 
     if (0 != window->enqueue_buffer(window, buf_handle)) {
-        ALOGE("%s: could not dequeue gralloc buffer", __FUNCTION__);
+        ALOGE("%s: could not enqueue gralloc buffer", __FUNCTION__);
         goto skipframe;
     }
 
@@ -360,8 +363,10 @@ static void CameraHAL_FixupParams(android::CameraParameters &camParams, priv_cam
 {
     const char *preferred_size = "640x480";
 
-    camParams.set(android::CameraParameters::KEY_VIDEO_FRAME_FORMAT,
+    if (camParams.get(android::CameraParameters::KEY_VIDEO_FRAME_FORMAT) != android::CameraParameters::PIXEL_FORMAT_YUV420SP) {
+        camParams.set(android::CameraParameters::KEY_VIDEO_FRAME_FORMAT,
                   android::CameraParameters::PIXEL_FORMAT_YUV420SP);
+    }
 
     if (!camParams.get(android::CameraParameters::KEY_PREFERRED_PREVIEW_SIZE_FOR_VIDEO)) {
         camParams.set(android::CameraParameters::KEY_PREFERRED_PREVIEW_SIZE_FOR_VIDEO,
@@ -375,9 +380,7 @@ static void CameraHAL_FixupParams(android::CameraParameters &camParams, priv_cam
         camParams.set(android::CameraParameters::KEY_SUPPORTED_SCENE_MODES, "");
         camParams.set(android::CameraParameters::KEY_SUPPORTED_WHITE_BALANCE, "");
         camParams.set(android::CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "15");
-    }
-
-    if (dev->cameraid == CAMERA_ID_BACK) {
+    } else if (dev->cameraid == CAMERA_ID_BACK) {
         if (!camParams.get(android::CameraParameters::KEY_MAX_NUM_FOCUS_AREAS)) {
             camParams.set(android::CameraParameters::KEY_MAX_NUM_FOCUS_AREAS, 1);
         }
@@ -400,7 +403,7 @@ static int camera_set_preview_window(struct camera_device *device,
         struct preview_stream_ops *window)
 {
     int min_bufs = -1;
-    int kBufferCount = 6;
+    int kBufferCount = 4;
     priv_camera_device_t *dev = NULL;
 
     ALOGI("%s+++,device %p", __FUNCTION__, device);
@@ -585,7 +588,7 @@ static int camera_start_preview(struct camera_device *device)
 
     ALOGI("%s--- rv %d", __FUNCTION__,rv);
 
-    if (!rv)
+    if (!rv && dev->preview_started != 1)
         dev->preview_started = 1;
 
     return rv;
@@ -601,7 +604,8 @@ static void camera_stop_preview(struct camera_device *device)
         return;
 
     dev = (priv_camera_device_t*) device;
-    dev->preview_started = 0;
+    if (dev->preview_started != 0)
+        dev->preview_started = 0;
 
     gCameraHals[dev->cameraid]->stopPreview();
     ALOGI("%s---", __FUNCTION__);
@@ -747,7 +751,8 @@ static int camera_take_picture(struct camera_device *device)
 
     rv = gCameraHals[dev->cameraid]->takePicture();
 
-    dev->preview_started = 0;
+    if (dev->preview_started != 0)
+        dev->preview_started = 0;
 
     gCameraHals[dev->cameraid]->stopPreview();
 
@@ -863,7 +868,8 @@ static void camera_release(struct camera_device *device)
         return;
 
     dev = (priv_camera_device_t*) device;
-    dev->preview_started = 0;
+    if (dev->preview_started != 0)
+        dev->preview_started = 0;
 
     gCameraHals[dev->cameraid]->release();
     ALOGI("%s---", __FUNCTION__);
@@ -884,7 +890,8 @@ static int camera_device_close(hw_device_t *device)
     dev = (priv_camera_device_t*) device;
 
     if (dev) {
-        dev->preview_started = 0;
+        if (dev->preview_started != 0)
+            dev->preview_started = 0;
         gCameraHals[dev->cameraid].clear();
         gCameraHals[dev->cameraid] = NULL;
         gCamerasOpen--;
@@ -928,6 +935,7 @@ static int camera_device_open(const hw_module_t *module, const char *name,
 {
     int rv = 0;
     int cameraid;
+    int count = 1;
     int num_cameras = 0;
     priv_camera_device_t *priv_camera_device = NULL;
     camera_device_ops_t *camera_ops = NULL;
@@ -970,7 +978,6 @@ static int camera_device_open(const hw_module_t *module, const char *name,
             rv = -ENOMEM;
             goto fail;
         }
-
         memset(priv_camera_device, 0, sizeof(*priv_camera_device));
         memset(camera_ops, 0, sizeof(*camera_ops));
 
@@ -1008,7 +1015,16 @@ static int camera_device_open(const hw_module_t *module, const char *name,
 
         priv_camera_device->cameraid = cameraid;
 
-        camera = SEC_openCameraHardware(cameraid);
+
+        while(camera == NULL && count <= OPEN_RETRIES) {
+            camera = SEC_openCameraHardware(cameraid);
+            if(camera == NULL) {
+                usleep(OPEN_RETRY_MSEC * 1000);
+            }
+            count++;
+        }
+        count = 1;
+
         if (camera == NULL) {
             ALOGE("Couldn't create instance of CameraHal class");
             rv = -ENOMEM;
@@ -1055,10 +1071,11 @@ static int camera_get_camera_info(int camera_id, struct camera_info *info)
 
     android::SEC_getCameraInfo(camera_id, &cameraInfo);
 
-    info->facing = cameraInfo.facing;
-    info->orientation = cameraInfo.orientation;
+    // Hack the cameraHAL to get correct facing and orientation values
+    info->facing = camera_id;
+    info->orientation = cameraInfo.facing;
 
-    ALOGI("%s: id:%i faceing:%i orientation: %i", __FUNCTION__,camera_id,
+    ALOGI("%s: id:%i facing:%i orientation: %i", __FUNCTION__,camera_id,
             info->facing, info->orientation);
 
     return rv;

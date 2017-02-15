@@ -44,10 +44,13 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
     frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:system/etc/media_codecs_google_telephony.xml \
-    frameworks/av/media/libstagefright/data/media_codecs_google_video_le.xml:system/etc/media_codecs_google_video_le.xml \
     $(LOCAL_PATH)/media/media_codecs.xml:system/etc/media_codecs.xml \
-    $(LOCAL_PATH)/media/media_codecs_performance.xml:system/etc/media_codecs_performance.xml \
     $(LOCAL_PATH)/media/media_profiles.xml:system/etc/media_profiles.xml
+
+#ext  Media configuration currently disabled
+#PRODUCT_COPY_FILES += \
+#    frameworks/av/media/libstagefright/data/media_codecs_google_video_le.xml:system/etc/media_codecs_google_video_le.xml \
+#    $(LOCAL_PATH)/media/media_codecs_performance.xml:system/etc/media_codecs_performance.xml
 
 # Audio configuration
 PRODUCT_COPY_FILES += \
@@ -119,14 +122,14 @@ PRODUCT_PACKAGES += \
     libexifa \
     libjpega
 
+# Gello
+#PRODUCT_PACKAGES += \
+#    Gello \
+#    Snap
+
 # Device-specific packages
 PRODUCT_PACKAGES += \
-    Snap \
-    Gello
-
-# AncoraParts
-PRODUCT_PACKAGES += \
-    AncoraParts \
+    AncoraParts
 
 # Libshims
 PRODUCT_PACKAGES += \
@@ -138,13 +141,13 @@ PRODUCT_PACKAGES += \
     ebtables \
     ethertypes
 
+WITH_CM_CHARGER := false
 # Charger images
 PRODUCT_PACKAGES += \
     charger_res_images
 
 # WPA supplicant
 PRODUCT_PACKAGES += \
-    dhcpcd.conf \
     hostapd \
     libwpa_client \
     wpa_supplicant \

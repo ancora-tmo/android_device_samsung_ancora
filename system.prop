@@ -7,7 +7,7 @@ rild.libargs=-d /dev/smd0
 ro.ril.hsxpa=1
 ro.ril.gprsclass=10
 ro.telephony.ril_class=SamsungRIL
-ro.telephony.ril.config=datacall,icccardstatus,facilitylock
+ro.telephony.ril.config=datacall,facilitylock
 
 # Ril sends only one RIL_UNSOL_CALL_RING, so set call_ring.multiple to false
 ro.telephony.call_ring.multiple=0
@@ -39,11 +39,8 @@ ro.config.low_ram=true
 # Force high-end graphics in low ram mode
 persist.sys.force_highendgfx=true
 
-# Reduce background apps limit to 16 on low-tier devices
-ro.sys.fw.bg_apps_limit=16
-
-# Set max background services
-ro.config.max_starting_bg=8
+# Reduce background apps limit to 8 on low-tier devices
+ro.sys.fw.bg_apps_limit=8
 
 # Camera
 media.stagefright.legacyencoder=true
@@ -57,18 +54,12 @@ config.disable_atlas=true
 mm.enable.smoothstreaming=true
 
 # Art
+dalvik.vm.dex2oat-filter=balanced
+dalvik.vm.dex2oat-flags=--no-watch-dog
+dalvik.vm.image-dex2oat-filter=speed
 dalvik.vm.dex2oat-swap=false
-#ro.sys.fw.dex2oat_thread_count=1
-
-# Custom dalvik heap parameters
-dalvik.vm.heapstartsize=5m
-dalvik.vm.heapgrowthlimit=48m
-dalvik.vm.heapsize=128m
-dalvik.vm.heaptargetutilization=0.9
-dalvik.vm.heapminfree=512k
-dalvik.vm.heapmaxfree=2m
 
 # Enable sdcardfs
-ro.sys.sdcardfs=true
+#ro.sys.sdcardfs=true
 
 ro.am.reschedule_service=true

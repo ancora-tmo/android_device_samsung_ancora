@@ -59,10 +59,10 @@ PRODUCT_COPY_FILES += \
 # Ramdisk
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/init.qcom.rc:root/init.qcom.rc \
+    $(LOCAL_PATH)/rootdir/init.qcom.power.rc:root/init.recovery.qcom.rc \
     $(LOCAL_PATH)/rootdir/init.qcom.usb.rc:root/init.qcom.usb.rc \
     $(LOCAL_PATH)/rootdir/ueventd.qcom.rc:root/ueventd.qcom.rc \
-    $(LOCAL_PATH)/rootdir/fstab.qcom:root/fstab.qcom \
-    $(LOCAL_PATH)/recovery/twrp.fstab:recovery/root/etc/twrp.fstab
+    $(LOCAL_PATH)/rootdir/fstab.qcom:root/fstab.qcom
 
 # Wifi calibration
 PRODUCT_COPY_FILES += \
@@ -133,7 +133,7 @@ PRODUCT_PACKAGES += \
 
 # Libshims
 PRODUCT_PACKAGES += \
-    libshim_native \
+    libshim_camera \
     libshim_ril
 
 # IPv6 tethering
@@ -141,7 +141,6 @@ PRODUCT_PACKAGES += \
     ebtables \
     ethertypes
 
-WITH_CM_CHARGER := false
 # Charger images
 PRODUCT_PACKAGES += \
     charger_res_images
@@ -162,3 +161,4 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
 
 $(call inherit-product-if-exists, vendor/samsung/ancora/device-vendor.mk)
 $(call inherit-product-if-exists, hardware/broadcom/wlan/bcmdhd/firmware/bcm4329/device-bcm.mk)
+$(call inherit-product, frameworks/native/build/phone-hdpi-512-dalvik-heap.mk)

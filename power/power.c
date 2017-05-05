@@ -236,7 +236,8 @@ static void power_hint(__attribute__((unused)) struct power_module *module,
 {
 
     switch (hint) {
-    case POWER_HINT_LAUNCH_BOOST:
+    case POWER_HINT_CPU_BOOST:
+    case POWER_HINT_LAUNCH:
         launch_boost();
 	break;
     case POWER_HINT_INTERACTION:

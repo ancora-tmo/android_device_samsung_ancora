@@ -271,7 +271,7 @@ public class SamsungRIL extends RIL implements CommandsInterface {
                 return rr;
             }
         }
-		
+
         if (rr.mRequest == RIL_REQUEST_SHUTDOWN) {
             // Set RADIO_STATE to RADIO_UNAVAILABLE to continue shutdown process
             // regardless of error code to continue shutdown procedure.
@@ -376,6 +376,38 @@ public class SamsungRIL extends RIL implements CommandsInterface {
     }
 
     @Override
+    protected Object
+    responseIccCardStatus(Parcel p) {
+        IccCardApplicationStatus appStatus;
+
+        IccCardStatus cardStatus = new IccCardStatus();
+        cardStatus.setCardState(p.readInt());
+        cardStatus.setUniversalPinState(p.readInt());
+        cardStatus.mGsmUmtsSubscriptionAppIndex = p.readInt();
+        cardStatus.mCdmaSubscriptionAppIndex = p.readInt();
+        int numApplications = p.readInt();
+
+        // limit to maximum allowed applications
+        if (numApplications > IccCardStatus.CARD_MAX_APPS) {
+            numApplications = IccCardStatus.CARD_MAX_APPS;
+        }
+        cardStatus.mApplications = new IccCardApplicationStatus[numApplications];
+        for (int i = 0 ; i < numApplications ; i++) {
+            appStatus = new IccCardApplicationStatus();
+            appStatus.app_type       = appStatus.AppTypeFromRILInt(p.readInt());
+            appStatus.app_state      = appStatus.AppStateFromRILInt(p.readInt());
+            appStatus.perso_substate = appStatus.PersoSubstateFromRILInt(p.readInt());
+            appStatus.aid            = p.readString();
+            appStatus.app_label      = p.readString();
+            appStatus.pin1_replaced  = p.readInt();
+            appStatus.pin1           = appStatus.PinStateFromRILInt(p.readInt());
+            appStatus.pin2           = appStatus.PinStateFromRILInt(p.readInt());
+            cardStatus.mApplications[i] = appStatus;
+        }
+        return cardStatus;
+    }
+
+    @Override
     protected void
     processUnsolicited (Parcel p, int type) {
         int response;
@@ -462,7 +494,7 @@ public class SamsungRIL extends RIL implements CommandsInterface {
                     mNITZTimeRegistrant.notifyRegistrant(new AsyncResult (null, result, null));
                 } else {
                     // in case NITZ time registrant isnt registered yet
-                    mLastNITZTimeInfo = nitz;
+                    mLastNITZTimeInfo = result;
                 }
                 break;
 

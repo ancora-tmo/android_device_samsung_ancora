@@ -1,3 +1,4 @@
+import init.qcom.power.rc
 import init.qcom.usb.rc
 
 on early-init
@@ -10,7 +11,7 @@ on init
     # Support legacy paths
     symlink /sdcard /storage/sdcard0
 
-    export LD_SHIM_LIBS "/system/lib/hw/camera.msm7x30.so|libshim_native.so:/system/lib/libril.so|libshim_ril.so:/system/lib/hw/sensors.ancora.so|libshim_native.so"
+    export LD_SHIM_LIBS "/system/lib/libcamera.so|libshim_camera.so:/system/lib/libseccameraadaptor.so|libshim_camera.so:/system/lib/libril.so|libshim_ril.so:/system/lib/libsec-ril.so|libshim_ril.so"
 
 on early-boot
     # set RLIMIT_MEMLOCK to 64MB
@@ -147,13 +148,6 @@ on boot
 
     # Increase swappiness for zram
     write /proc/sys/vm/swappiness 80
-
-    # increase read-ahead value to 256 kb
-    write /sys/block/mmcblk0/queue/read_ahead_kb 256
-    
-    # Adaptive LMK
-    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 1
-    write /sys/module/lowmemorykiller/parameters/vmpressure_file_min 53059
 
     # For setting tcp delayed ack
     chown system system /sys/kernel/ipv4/tcp_delack_seg

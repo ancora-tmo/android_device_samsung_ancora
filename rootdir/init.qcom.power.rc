@@ -1,0 +1,9 @@
+on property:recovery.perf.mode=1
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor performance
+
+on property:recovery.perf.mode=0
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
+
+on property:ro.twrp.boot=1
+    # Disable hardware keys when in TWRP recovery
+    write /sys/devices/virtual/sec/qt602240_noise_test/keypad_enable 0

@@ -1,0 +1,8 @@
+/cache          ext4    /dev/block/mmcblk0p15    flags=display="Cache"
+/data           ext4    /dev/block/mmcblk0p28    flags=display="Data";encryptable=footer;length=-16384
+/system         ext4    /dev/block/mmcblk0p17    flags=display="System"
+/boot           emmc    /dev/block/mmcblk0p8     flags=display="Boot"
+/recovery       emmc    /dev/block/mmcblk0p13    flags=display="Recovery";backup=1
+
+/external_sd    auto    /dev/block/mmcblk1p1     /dev/block/mmcblk1    flags=display="MicroSD";storage;wipeingui;removable
+/usb-otg        auto    /dev/block/sda1          /dev/block/sda        flags=display="USB OTG";storage;wipeingui;removable

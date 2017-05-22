@@ -130,9 +130,6 @@
          format is UMTS|LTE|... -->
     <string translatable="false" name="config_radio_access_family">GSM|WCDMA</string>
 
-    <!-- Enable doze powersaving / Enabled globally in CM now -->
-    <!--  <bool name="config_enableAutoPowerModes">true</bool> -->
-
     <!-- Boolean to enable stk functionality on Samsung phones -->
     <bool name="config_samsung_stk">true</bool>
 
